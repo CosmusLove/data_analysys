@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Moje hobby i projekty - Rozbudowana strona z audio i przyciskami</title>
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+  <!-- FontAwesome -->
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+  />
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f0f4f8;
+      color: #333;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: row;
+    }
+    /* Sidebar */
+    .sidebar {
+      width: 220px;
+      background: #4a90e2;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      padding: 1.5rem;
+      position: fixed;
+      height: 100vh;
+    }
+    .sidebar .logo {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin-bottom: 2rem;
+      cursor: default;
+    }
+    .sidebar nav a {
+      color: white;
+      text-decoration: none;
+      display: block;
+      padding: 0.8rem 1rem;
+      border-radius: 0.5rem;
+      margin-bottom: 0.5rem;
+      transition: background 0.3s;
+    }
+    .sidebar nav a:hover,
+    .sidebar nav a.active {
+      background: #357abd;
+    }
+    .sidebar ul.social-icons {
+      margin-top: auto;
+      list-style: none;
+      padding-left: 0;
+      display: flex;
+      gap: 1rem;
+    }
+    .sidebar ul.social-icons li a {
+      color: white;
+    }
+
+    /* Content */
+    main.content {
+      margin-left: 240px;
+      padding: 2rem;
+      flex: 1;
+      width: 70%;
+      overflow-x: hidden;
+      position: relative;
+      min-height: 600px;
+    }
+
+    /* Sections */
+    section {
+      background: white;
+      border-radius: 12px;
+      padding: 1.5rem 2rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      display: none;
+      min-height: 500px;
+      box-sizing: border-box;
+    }
+    section.visible {
+      opacity: 1;
+      transform: translateY(0);
+      display: block;
+      position: relative;
+    }
+
+    /* Blog */
+    .blog-article {
+      border-left: 4px solid #4a90e2;
+      padding-left: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .blog-article h4 {
+      margin-top: 0;
+      color: #357abd;
+    }
+
+    /* FAQ */
+    .faq-item {
+      margin-bottom: 1rem;
+    }
+    .faq-question {
+      font-weight: 700;
+      cursor: pointer;
+      background: #e3f0ff;
+      padding: 0.8rem 1rem;
+      border-radius: 8px;
+      user-select: none;
+    }
+    .faq-answer {
+      padding: 0.6rem 1rem 0.6rem 1rem;
+      display: none;
+      border-left: 3px solid #4a90e2;
+      background: #f9fbff;
+      border-radius: 0 0 8px 8px;
+      margin-top: 0.2rem;
+    }
+    .faq-answer.visible {
+      display: block;
+    }
+
+    /* Projects */
+    .project-card {
+      background: #d9e6fb;
+      border-radius: 12px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 2px 8px rgba(74, 144, 226, 0.4);
+      transition: box-shadow 0.3s ease;
+    }
+    .project-card:hover {
+      box-shadow: 0 6px 18px rgba(74, 144, 226, 0.7);
+    }
+    .project-title {
+      font-weight: 700;
+      color: #1c3d5a;
+      margin-bottom: 0.3rem;
+    }
+    .project-desc {
+      font-size: 0.95rem;
+      color: #355c7d;
+    }
+
+    /* Buttons */
+    .btn-primary-custom {
+      background-color: #4a90e2;
+      color: white;
+      padding: 0.5rem 1.2rem;
+      border-radius: 8px;
+      text-decoration: none;
+      display: inline-block;
+      font-weight: 600;
+      transition: background-color 0.3s ease;
+      border: none;
+      cursor: pointer;
+      margin: 0 0.5rem;
+    }
+    .btn-primary-custom:hover {
+      background-color: #357abd;
+    }
+
+    /* Progress Bar */
+    #progressContainer {
+  position: fixed;
+  bottom: 20px;
+  left: 60%;              /* przesunięcie bliżej prawej */
+  transform: translateX(-60%); /* przesunięcie do środka względem 60% */
+  width: 90%;
+  max-width: 900px;
+  z-index: 1000;
+  margin-top: 0;
+}
+
+
+    #progressBarBackground {
+      background: #cbd6eb;
+      border-radius: 12px;
+      height: 14px;
+      overflow: hidden;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+    }
+    #progressBar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #68a2dd 0%, #357abd 100%);
+      border-radius: 12px;
+      transition: width 0.4s ease;
+    }
+
+    audio {
+      margin-top: 1rem;
+      width: 100%;
+      outline: none;
+    }
+
+    #chartContainer {
+      max-width: 900px;
+      margin: 1rem auto 0;
+    }
+    .charts-row {
+      display: flex;
+      gap: 2rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .chart-wrapper {
+      flex: 1 1 280px;
+      min-width: 280px;
+      height: 300px;
+    }
+
+    .nav-buttons {
+      margin-top: 1.5rem;
+      text-align: center;
+    }
+
+    #gif1{
+      vertical-align: middle;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+    <div class="logo">Data <em>Analysis</em></div>
+    <nav>
+      <a href="#" class="active" data-step="0">Introduction</a>
+      <a href="#" data-step="1">Data analysis tools</a>
+      <a href="#" data-step="2">FAQ</a>
+      <a href="#" data-step="3">My experiences with data analysis</a>
+      <a href="#" data-step="4">Charts</a>
+    </nav>
+    <ul class="social-icons list-unstyled mt-auto d-flex gap-3">
+      <li><a href="#"><i class="fab fa-facebook fa-lg text-white"></i></a></li>
+      <li><a href="#"><i class="fab fa-twitter fa-lg text-white"></i></a></li>
+      <li><a href="#"><i class="fab fa-linkedin fa-lg text-white"></i></a></li>
+      <li><a href="#"><i class="fab fa-behance fa-lg text-white"></i></a></li>
+    </ul>
+  </div>
+
+  <main class="content">
+    <section id="step0" class="visible">
+      <h2 style="text-align:center">Welcome to my website, which aims to share a bit about data analysis!</h2>
+      <p style="text-align:center">
+        In short, what I do:
+      </p>
+      <div id="gif1" style="text-align:center;">
+        <img id="gif1" style="height:200px;" src="3.gif" alt="">
+        <img id="gif1" style="height:250px;" src="1.gif" alt="">
+        <img id="gif1" style="height:200px;" src="2.gif" alt="">
+      </div>
+     <audio id="audio0" controls>
+  <source src="1.mp3" type="audio/mpeg" />
+</audio>
+<b><div id="transcript0" style="text-align: center; padding:10px; margin-top:5px; border-radius:5px; min-height:40px;"></div></b>
+    </section>
+
+
+<section id="step1">
+  <h2>Data analysis tools</h2>
+  <ul class="list-group">
+    <li class="list-group-item">
+      <strong>Python</strong> –  a versatile programming language with many libraries for data analysis, such as Pandas, NumPy, and Matplotlib.
+    </li>
+    <li class="list-group-item">
+      <strong>SQL</strong> – a query language for databases, essential for extracting data from relational databases.
+    </li>
+    <li class="list-group-item">
+      <strong>Power BI</strong> – a Microsoft tool for creating interactive reports and dashboards.
+    </li>
+    <li class="list-group-item">
+      <strong>Excel</strong> – a popular spreadsheet, often the first step in data analysis.
+    </li>
+    <li class="list-group-item">
+      <strong>Tableau</strong> – an advanced data visualization tool with an intuitive interface.
+    </li>
+  </ul>
+  <audio id="audio1" controls>
+  <source src="2.mp3" type="audio/mpeg" />
+</audio>
+<b><div id="transcript1" style="text-align: center; padding:10px; margin-top:5px; border-radius:5px; min-height:40px;"></div></b>
+</section>
+
+
+    <section id="step2">
+      <h2>Frequently Asked Questions (FAQ)</h2>
+ <div class="faq-item">
+    <div class="faq-question">Do I need a strong computer to work as a Data Analyst?</div>
+    <div class="faq-answer">
+      Not always. At the start, a laptop with i5/i7 processor, 8–16 GB RAM, and SSD is enough. For big data, better hardware may be needed.
+    </div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-question">Which operating system is best – Windows, Mac, or Linux?</div>
+    <div class="faq-answer">
+      Each has good points. Windows is most popular. Mac works well with Python and BI tools. Linux gives more control but is harder for beginners.
+    </div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-question">Is it worth having two monitors?</div>
+    <div class="faq-answer">
+      Yes, a second monitor helps a lot. For example, one screen for code and one for data or documents.
+    </div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-question">Do I need special peripheral devices?</div>
+    <div class="faq-answer">
+      No, but a good mouse, keyboard, and comfortable desk/chair make work better.
+    </div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-question">Can I work remotely as a Data Analyst?</div>
+    <div class="faq-answer">
+      Yes, most work can be done remotely if you have good equipment and internet.
+    </div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-question">What programs do Data Analysts use most?</div>
+    <div class="faq-answer">
+      Excel, SQL (like MySQL, PostgreSQL), Python (Pandas, Matplotlib), Power BI, Tableau, Jupyter Notebook.
+    </div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-question">Do I need to know programming?</div>
+    <div class="faq-answer">
+      Not right away. Excel and SQL are basic. Python or R are good to learn later.
+    </div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-question">Are free tools enough to learn?</div>
+    <div class="faq-answer">
+      Yes, you can learn using free versions of Power BI, Google Sheets, Jupyter, VS Code, Google Colab.
+    </div>
+  </div>
+
+  <div class="faq-item">
+    <div class="faq-question">What is Jupyter Notebook?</div>
+    <div class="faq-answer">
+      It is a tool where you can write code (mainly Python), visualize data, and document analysis.
+    </div>
+  </div>
+       <audio id="audio4" controls>
+  <source src="5.mp3" type="audio/mpeg" />
+</audio>
+<b><div id="transcript4" style="text-align: center; padding:10px; margin-top:5px; border-radius:5px; min-height:40px;"></div></b>
+    </section>
+
+    <section id="step3">
+      <h2>My experiences with data analysis</h2>
+      <div class="project-card">
+        <div class="project-title">School Experience</div>
+        <div class="project-desc">At school, I learned the basics of data analysis, like how to group queries. This was my first time working with these tools and ideas. School gave me a good foundation to understand data better.</div>
+      </div>
+      <div class="project-card">
+        <div class="project-title">Experience Outside School</div>
+        <div class="project-desc">After school, I took a course in data analysis. This course helped me learn more and gave me a certificate to show my skills. I also did an internship where I made reports and charts. Now, I work as an assistant about once a month. I help with tasks and learn a lot from my experienced coworkers.</div>
+      </div>
+         <audio id="audio2" controls>
+  <source src="3.mp3" type="audio/mpeg" />
+</audio>
+<b><div id="transcript2" style="text-align: center; padding:10px; margin-top:5px; border-radius:5px; min-height:40px;"></div></b>
+    </section>
+
+    <section id="step4">
+      <h2>My skill level</h2>
+      <p>Here are various charts showcasing my skills.</p>
+
+      <div id="chartContainer">
+        <div class="charts-row">
+          <div class="chart-wrapper">
+            <canvas id="barChart"></canvas>
+          </div>
+          <div class="chart-wrapper">
+            <canvas id="pieChart"></canvas>
+          </div>
+        </div>
+        <div class="charts-row">
+          <div class="chart-wrapper">
+            <canvas id="radarChart"></canvas>
+          </div>
+          <div class="chart-wrapper">
+            <br>
+            <canvas id="lineChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+       <audio id="audio3" controls>
+  <source src="4.mp3" type="audio/mpeg" />
+</audio>
+<b><div id="transcript3" style="text-align: center; padding:10px; margin-top:5px; border-radius:5px; min-height:40px;"></div></b>
+</section>
+    </section>
+
+    <div class="nav-buttons">
+      <button id="prevBtn" class="btn-primary-custom"><i class="fa-solid fa-arrow-left"></i> Previous section</button>
+      <button id="nextBtn" class="btn-primary-custom">Next section <i class="fa-solid fa-arrow-right"></i></button>
+    </div>
+
+    <div id="progressContainer">
+      <div id="progressBarBackground">
+        <div id="progressBar"></div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // Tablica z transkrypcjami dla każdego audio (tu tylko jeden przykład)
+const transcripts = [
+  [ // dla audio0
+    { time: 0, text: "Hi everyone!" },
+    { time: 2, text: "Thanks for coming to my website. I want to tell you a little about my work — working with data. I know data can sound hard or boring, but I will try to explain it simply." },
+    { time: 13, text: "So, what do I do? I look at numbers and information to find helpful facts. These facts help people make good choices. " },
+    { time: 23, text: "Data is interesting because it is everywhere, and it can tell us a lot if we know how to read it. " }
+  ],
+  [
+    { time: 0, text: "To do my work, I use some tools. One tool is Python — a programming language" },
+    { time: 6, text: "It helps me work with data faster and easier" },
+    { time: 11, text: "In Python, I use Pandas to work with tables, NumPy to do math, and Matplotlib to make charts." },
+    { time: 19, text: "Another tool is SQL — it is a language to get data from databases" },
+    { time: 23, text: "You can ask questions with SQL, and it gives you the data you want." },
+    { time: 28, text: "This helps because data is often in big databases." },
+    { time: 33, text: "I also use Power BI — this tool helps me make reports and dashboards." },
+    { time: 41, text: "Dashboards are special pages with many charts and numbers that show data clearly." },
+    { time: 50, text: "It is a good way to explain data to others." },
+    { time: 58, text: "Excel is very popular too. " },
+    { time: 61, text: "Many people start with Excel because it is easy to use." },
+    { time: 66, text: "In Excel, you can make simple tables, charts, and filter data." },
+    { time: 70, text: "Another tool I use is Tableau." },
+    { time: 74, text: "Tableau helps make nice pictures of data." },
+    { time: 77, text: " You can create charts and maps that help people understand data better." }
+  ],
+    [
+    { time: 0, text: "How did I start working with data?" },
+    { time: 3, text: " I started learning data analysis at school. I learned some basics, like how to group data and ask simple questions to databases." },
+    { time: 12, text: "This helped me understand how data works." },
+    { time: 16, text: "While still in school, I also took a course in data analysis." },
+    { time: 21, text: "I learned many new things there and got a certificate to show my skills." },
+    { time: 25, text: "After the course, I did an internship." },
+    { time: 28, text: "I worked on reports and charts almost every day. It was great practice and helped me learn even more." },
+    { time: 37, text: "Now, I sometimes work as a data assistant" },
+    { time: 41, text: " It’s not often, but it gives me more experience and I get to help with real tasks." },
+    { time: 48, text: "I also learn a lot from people who have more experience." }
+  ],
+  [
+  { "time": 0, "text": "Let's start with the bar chart." },
+  { "time": 3, "text": "It shows how well I know different tools and languages." },
+  { "time": 7, "text": "I am very good at SQL and Excel – my level is nine and eight." },
+  { "time": 12, "text": "I also have good knowledge of Power BI and PHP." },
+  { "time": 16, "text": "I am still learning Python, JavaScript, and R, but I’m improving step by step." },
+  { "time": 22, "text": "Now, look at the pie chart." },
+  { "time": 24, "text": "It shows the tools I use most often." },
+  { "time": 27, "text": "Python is the most important for me – 35% of my work." },
+  { "time": 32, "text": "I also use Excel, SQL, and Power BI." },
+  { "time": 36, "text": "Sometimes, I use Tableau, but not very often." },
+  { "time": 40, "text": "The line chart shows how my skills changed over time." },
+  { "time": 44, "text": "As you can see, I started learning Python in 2020." },
+  { "time": 49, "text": "Now, my Python skills are much better." },
+  { "time": 52, "text": "With SQL, I started in the past and improved a lot." },
+  { "time": 56, "text": "Now, I feel confident using it in real projects." },
+  { "time": 60, "text": "Finally, let’s look at the radar chart." },
+  { "time": 63, "text": "It shows what I can do." },
+  { "time": 66, "text": "My best skill is data analysis." },
+  { "time": 69, "text": "I can also build websites and create visual data." },
+  { "time": 73, "text": "I’m still working on automation, but I’m learning more every week." }
+],[
+  { "time": 0, "text": "Let me tell you about working as a Data Analyst and the tools you need." },
+  { "time": 6, "text": "At first, you don’t need a very strong computer." },
+  { "time": 9, "text": "A laptop with a good processor like i5 or i7, 8 to 16 GB of RAM, and a fast SSD is enough." },
+  { "time": 17, "text": "But if you work with a lot of data, you might need a better computer." },
+  { "time": 22, "text": "There are different operating systems you can use." },
+  { "time": 26, "text": "Windows is the most common and easy to use." },
+  { "time": 28, "text": "Macs work well if you use Python and some data tools." },
+  { "time": 33, "text": "Linux is very powerful but can be hard if you’re new." },
+  { "time": 38, "text": "Having two screens helps a lot." },
+  { "time": 41, "text": "You can put your code on one screen and your data or notes on the other." },
+  { "time": 48, "text": "It makes work easier and faster." },
+  { "time": 50, "text": "You don’t need special devices to start." },
+  { "time": 53, "text": "But a good chair, mouse, and keyboard help if you work a long time." },
+  { "time": 57, "text": "Many Data Analysts work from home now." },
+  { "time": 60, "text": "You just need a good computer and internet." },
+  { "time": 65, "text": "The tools I use most are Excel, SQL, and Python with tools like Pandas and Matplotlib." },
+  { "time": 73, "text": "Power BI and Tableau help make reports." },
+  { "time": 78, "text": "Jupyter Notebook is great because you can write code, make charts, and take notes in one place." },
+  { "time": 85, "text": "You don’t have to know programming at first." },
+  { "time": 87, "text": "Start with Excel and SQL." },
+  { "time": 91, "text": "Later, you can learn Python or R, which many Data Analysts use." },
+  { "time": 97, "text": "Many of these tools are free or have free versions." },
+  { "time": 100, "text": "You can practice with free Power BI, Google Sheets, Jupyter Notebook, VS Code, or Google Colab without paying." },
+  { "time": 110, "text": "Jupyter Notebook is a cool tool." },
+  { "time": 115, "text": "It’s like a notebook where you write Python code, make charts, and explain your work so others understand it." }
+],
+];
+
+// Funkcja przypisująca nasłuchiwanie do audio i aktualizująca transkrypcję
+function setupTranscript(audioId, transcriptIndex) {
+  const audio = document.getElementById(audioId);
+  const transcriptDiv = document.getElementById('transcript' + transcriptIndex);
+  if (!audio || !transcriptDiv) return;
+
+  const currentTranscript = transcripts[transcriptIndex];
+
+  audio.addEventListener('timeupdate', () => {
+    const currentTime = audio.currentTime;
+    let textToShow = '';
+
+    for (let i = 0; i < currentTranscript.length; i++) {
+      if (currentTime >= currentTranscript[i].time) {
+        textToShow = currentTranscript[i].text;
+      }
+    }
+
+    transcriptDiv.textContent = textToShow;
+  });
+}
+
+// Uruchom dla każdego audio, które masz na stronie (tu przykład dla audio0)
+setupTranscript('audio0', 0);
+setupTranscript('audio1', 1);
+setupTranscript('audio2', 2);
+setupTranscript('audio3', 3);
+setupTranscript('audio4', 4);
+
+
+  </script>
+  <script>
+    const sections = [
+      document.getElementById('step0'),
+      document.getElementById('step1'),
+      document.getElementById('step2'),
+      document.getElementById('step3'),
+      document.getElementById('step4'),
+    ];
+    const navLinks = document.querySelectorAll('.sidebar nav a');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const progressBar = document.getElementById('progressBar');
+
+    let currentStep = 0;
+
+    function showStep(step) {
+      if (step < 0 || step >= sections.length) return;
+
+      sections.forEach((sec, i) => {
+        sec.classList.toggle('visible', i === step);
+      });
+
+      navLinks.forEach((link, i) => {
+        link.classList.toggle('active', i === step);
+      });
+
+      currentStep = step;
+
+      let percent = ((step) / (sections.length - 1)) * 100;
+      progressBar.style.width = percent + '%';
+
+      prevBtn.disabled = (step === 0);
+      nextBtn.disabled = (step === sections.length - 1);
+    }
+
+    navLinks.forEach((link, i) => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        showStep(i);
+      });
+    });
+
+    prevBtn.addEventListener('click', () => {
+      showStep(currentStep - 1);
+    });
+    nextBtn.addEventListener('click', () => {
+      showStep(currentStep + 1);
+    });
+
+    showStep(currentStep);
+
+    const faqQuestions = document.querySelectorAll('.faq-question');
+    faqQuestions.forEach(q => {
+      q.addEventListener('click', () => {
+        const answer = q.nextElementSibling;
+        answer.classList.toggle('visible');
+      });
+    });
+
+    const barCtx = document.getElementById('barChart').getContext('2d');
+    new Chart(barCtx, {
+      type: 'bar',
+      data: {
+        labels: ['Python', 'Excel', 'Power BI', 'SQL', 'JavaScript', 'R', 'PHP'],
+        datasets: [{
+          label: 'Poziom znajomości',
+          data: [4, 8, 6, 9, 5, 3,7],
+          backgroundColor: '#4a90e2'
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: { beginAtZero: true, max: 10 }
+        },
+        plugins: {
+          legend: { display: false }
+        }
+      }
+    });
+
+const pieCtx = document.getElementById('pieChart').getContext('2d');
+new Chart(pieCtx, {
+  type: 'pie',
+  data: {
+    labels: ['Python', 'Excel', 'SQL', 'Power BI', 'Tableau'],
+    datasets: [{
+      data: [35, 25, 20, 15, 5],
+      backgroundColor: [
+        '#3572A5', // Python
+        '#217346', // Excel
+        '#F29111', // SQL
+        '#E34A6F', // Power BI
+        '#20B2AA'  // Tableau
+      ]
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'bottom'
+      },
+      tooltip: {
+        callbacks: {
+          label: function(context) {
+            return `${context.label}: ${context.parsed}%`;
+          }
+        }
+      }
+    }
+  }
+});
+
+
+    const lineCtx = document.getElementById('lineChart').getContext('2d');
+    new Chart(lineCtx, {
+      type: 'line',
+      data: {
+        labels: ['2020', '2021', '2022', '2023', '2024','2025'],
+        datasets: [{
+          label: 'Python',
+          data: [1, 3, 4, 5, 4,4],
+          borderColor: '#4a90e2',
+          tension: 0.3,
+          fill: false,
+          pointBackgroundColor: '#4a90e2'
+        }, {
+          label: 'SQL',
+          data: [2, 5, 7, 8, 8,9],
+          borderColor: '#f5a623',
+          tension: 0.3,
+          fill: false,
+          pointBackgroundColor: '#f5a623'
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { position: 'bottom' }
+        },
+        scales: {
+          y: { beginAtZero: true, max: 10 }
+        }
+      }
+    });
+
+    const radarCtx = document.getElementById('radarChart').getContext('2d');
+    new Chart(radarCtx, {
+      type: 'radar',
+      data: {
+        labels: ['Data Analysis', 'Automation', 'Web Development', 'Visualization'],
+        datasets: [{
+          label: 'My level',
+          data: [8, 3, 8, 6],
+          backgroundColor: 'rgba(74,144,226,0.2)',
+          borderColor: 'rgba(74,144,226,1)',
+          pointBackgroundColor: 'rgba(74,144,226,1)'
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          r: {
+            beginAtZero: true,
+            max: 10,
+            ticks: {
+              stepSize: 2
+            }
+          }
+        },
+        plugins: {
+          legend: { position: 'top' }
+        }
+      }
+    });
+  </script>
+</body>
+</html>
